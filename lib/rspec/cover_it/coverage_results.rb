@@ -19,7 +19,8 @@ module RSpec
       end
 
       def amount
-        covered_line_count.to_f / relevant_line_count.to_f
+        return 0.0 if relevant_line_count <= 0
+        100.0 * covered_line_count.to_f / relevant_line_count.to_f
       end
 
       private

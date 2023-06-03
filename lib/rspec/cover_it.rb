@@ -3,7 +3,6 @@ require "coverage"
 module RSpec
   module CoverIt
     Error = Class.new(StandardError)
-    IncompatibilityError = Class.new(Error)
     MissingCoverage = Class.new(Error)
   end
 end
@@ -13,25 +12,18 @@ Dir.glob(glob).sort.each { |f| require(f) }
 
 module RSpec
   module CoverIt
-    # Intended to wrap the `require` statements in your spec_helper file that
-    # actually load your classes. Note that, in the context of an _autoloader_,
-    # this approach isn't accurate, and will need some significant change.
-    #
-    # Most likely, we'll need to register hooks with the autoloader and start
-    # tracking the delta across each piece of loaded code. But not yet!
-    def self.load_code(name: nil, filter: nil, &block)
-      state = CoverageState.new(name: name, filter: filter)
-      state.loading_code(&block)
-      state
+    class << self
+      attr_accessor :state
     end
 
-    def self.setup(config, state)
-      config.prepend_before(:context) do |context|
-        state.start_tracking_for
-      end
+    def self.setup(name: nil, filter: nil, global_minimum: 100.0)
+      RSpec::CoverIt.state = CoverageState.new(name: name, filter: filter, minimum: global_minimum)
+      RSpec::CoverIt.state.start_tracking
 
-      config.append_after(:context) do |context|
-        state.finish_tracking_for(self.class, context)
+      RSpec.configure do |config|
+        config.prepend_before(:suite) { RSpec::CoverIt.state.finish_load_tracking }
+        config.prepend_before(:context) { |context| RSpec::CoverIt.state.start_tracking_for(self.class, context) }
+        config.append_after(:context) { |context| RSpec::CoverIt.state.finish_tracking_for(self.class, context) }
       end
     end
   end
