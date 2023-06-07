@@ -5,6 +5,10 @@ module RSpec
         @scope, @rspec_context = scope, rspec_context
       end
 
+      def cover_it?
+        target_class && metadata.fetch(:cover_it, nil)
+      end
+
       def target_path
         Object.const_source_location(target_class_name).first
       end
