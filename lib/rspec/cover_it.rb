@@ -16,8 +16,8 @@ module RSpec
       attr_accessor :state
     end
 
-    def self.setup(filter:)
-      RSpec::CoverIt.state = CoverageState.new(filter: filter)
+    def self.setup(filter: nil, autoenforce: false)
+      RSpec::CoverIt.state = CoverageState.new(filter: filter, autoenforce: autoenforce)
       RSpec::CoverIt.state.start_tracking
 
       RSpec.configure do |config|

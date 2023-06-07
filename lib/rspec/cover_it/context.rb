@@ -1,12 +1,12 @@
 module RSpec
   module CoverIt
     class Context
-      def initialize(scope:, rspec_context:)
-        @scope, @rspec_context = scope, rspec_context
+      def initialize(scope:, rspec_context:, autoenforce:)
+        @scope, @rspec_context, @autoenforce = scope, rspec_context, autoenforce
       end
 
       def cover_it?
-        target_class && metadata.fetch(:cover_it, nil)
+        target_class && metadata.fetch(:cover_it, autoenforce?)
       end
 
       def target_path
@@ -24,6 +24,10 @@ module RSpec
       private
 
       attr_reader :scope, :rspec_context
+
+      def autoenforce?
+        @autoenforce
+      end
 
       def metadata
         scope.metadata

@@ -25,7 +25,7 @@ module RSpec
       end
 
       def enforce!
-        return if local_coverage_rate >= 1.0
+        return if local_coverage.nil? || local_coverage_rate >= 1.0
         lines = local_coverage.each_with_index.select { |v, _i| v&.zero? }.map(&:last)
 
         summary =

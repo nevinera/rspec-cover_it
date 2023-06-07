@@ -4,7 +4,7 @@ module RSpec
       def initialize(filter:, results:)
         @filter = filter
         @results = results
-          .select { |k, _v| k.start_with?(filter) }
+          .select { |k, _v| filter.nil? || k.start_with?(filter) }
           .map { |k, v| [k, v.dup] }
           .to_h
       end

@@ -126,3 +126,13 @@ aren't a lot of controls - it works, but it's a bit ugly and doesn't really
 give the right immediate impression. I'm contemplating using an `after(:suite)`
 hook and aggregating them myself, but at the end of the day RSpec is in control
 of the output stream, and we don't entirely fit its metaphor.
+
+We're using `Object.const_source_location` to find the path of the source file
+defining a given constant. That _mostly_ works, but it actually gives the path
+of the _first_ source file that defined that constant. So if your gem defines
+its version in `lib/foo/version.rb` (as an example), in a separate file from
+lib/foo.rb, the _path_ for `Foo` may end up being the former. Which is.. not
+going to have much coverable code, of course. This is an edge case, but one
+that is likely to occur fairly regularly. I haven't thought of a _good_ solution
+yet. Perhaps if the `covers` array includes a string, we should treat it as a
+relative path?

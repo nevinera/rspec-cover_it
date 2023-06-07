@@ -3,8 +3,8 @@ module RSpec
     class CoverageState
       attr_reader :filter
 
-      def initialize(filter:)
-        @filter = filter
+      def initialize(filter: nil, autoenforce: false)
+        @filter, @autoenforce = filter, autoenforce
         @pretest_results = nil
         @context_coverages = {}
       end
@@ -20,7 +20,7 @@ module RSpec
       end
 
       def start_tracking_for(scope, rspec_context)
-        context = Context.new(scope: scope, rspec_context: rspec_context)
+        context = context_for(scope, rspec_context)
         return unless context.cover_it?
 
         context_coverage_for(context).tap do |context_coverage|
@@ -29,7 +29,7 @@ module RSpec
       end
 
       def finish_tracking_for(scope, rspec_context)
-        context = Context.new(scope: scope, rspec_context: rspec_context)
+        context = context_for(scope, rspec_context)
         return unless context.cover_it?
 
         context_coverage_for(context).tap do |context_coverage|
@@ -41,6 +41,14 @@ module RSpec
       private
 
       attr_reader :pretest_results
+
+      def autoenforce?
+        @autoenforce
+      end
+
+      def context_for(scope, rspec_context)
+        Context.new(scope: scope, rspec_context: rspec_context, autoenforce: autoenforce?)
+      end
 
       def context_coverage_for(context)
         @context_coverages[context.target_class] ||= ContextCoverage.new(
