@@ -24,10 +24,10 @@ module RSpec
         covered_line_count.to_f / coverable_line_count.to_f
       end
 
-      def enforce!
+      def enforce!(default_threshold:)
         if precovered?
           fail_with_missing_code!
-        elsif local_coverage_rate < 1.0
+        elsif local_coverage_rate < (context.specific_threshold || default_threshold)
           fail_with_missing_coverage!
         end
       end

@@ -3,8 +3,8 @@ module RSpec
     class CoverageState
       attr_reader :filter
 
-      def initialize(filter: nil, autoenforce: false)
-        @filter, @autoenforce = filter, autoenforce
+      def initialize(filter: nil, autoenforce: false, default_threshold: 100.0)
+        @filter, @autoenforce, @default_threshold = filter, autoenforce, default_threshold
         @pretest_results = nil
         @context_coverages = {}
       end
@@ -34,7 +34,7 @@ module RSpec
 
         context_coverage_for(context).tap do |context_coverage|
           context_coverage.postcontext_coverage = Coverage.peek_result[context.target_path]
-          context_coverage.enforce!
+          context_coverage.enforce!(default_threshold: default_threshold_rate)
         end
       end
 
@@ -44,6 +44,10 @@ module RSpec
 
       def autoenforce?
         @autoenforce
+      end
+
+      def default_threshold_rate
+        @default_threshold / 100.0
       end
 
       def context_for(scope, rspec_context)

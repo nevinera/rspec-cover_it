@@ -11,6 +11,11 @@ module RSpec
           completeness_checker.running_all_examples?
       end
 
+      def specific_threshold
+        meta_value = metadata.fetch(:cover_it, nil)
+        meta_value.is_a?(Numeric) ? meta_value / 100.0 : nil
+      end
+
       def target_path
         Object.const_source_location(target_class_name).first
       end
