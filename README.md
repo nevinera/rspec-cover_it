@@ -15,10 +15,11 @@ running, which means that often large swathes of code are actually only covered
 incidentally, through tests that aren't intended to exercise that code, but
 _happens to_.
 
-This approach was moderately inspired by https://github.com/jamesdabbs/rspec-coverage,
-which was itself apparently inspired by a rubyconf 2016 talk by Ryan Davis. That
-talk and library are mostly concerned with making sure that we don't _overcount_
-coverage though, while this one has three goals:
+This approach was moderately inspired by
+[rspec-coverage](https://github.com/jamesdabbs/rspec-coverage), which was itself
+apparently inspired by a rubyconf 2016 talk by Ryan Davis. That talk and library
+are mostly concerned with making sure that we don't _overcount_ coverage though,
+while this one has three goals:
 
 1. Make coverage enforcement simpler
 1. Enforce coverage _in the test suite_ (or nearly so)
@@ -93,7 +94,7 @@ shame!
 When there's missing coverage on the class under test, you'll currently see
 output like this:
 
-```
+```bash
 ❯ rspec
 
 Randomized with seed 29392
