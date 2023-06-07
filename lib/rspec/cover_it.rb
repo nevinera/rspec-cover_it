@@ -19,10 +19,19 @@ module RSpec
 
     def self.setup(filter: nil, autoenforce: false)
       RSpec::CoverIt.state = CoverageState.new(filter: filter, autoenforce: autoenforce)
-      RSpec::CoverIt.state.start_tracking
+      setup_pretest_tracking
+      setup_per_context_tracking
+    end
 
+    private_class_method def self.setup_pretest_tracking
+      RSpec::CoverIt.state.start_tracking
       RSpec.configure do |config|
         config.prepend_before(:suite) { RSpec::CoverIt.state.finish_load_tracking }
+      end
+    end
+
+    private_class_method def self.setup_per_context_tracking
+      RSpec.configure do |config|
         config.prepend_before(:context) { |context| RSpec::CoverIt.state.start_tracking_for(self.class, context) }
         config.append_after(:context) { |context| RSpec::CoverIt.state.finish_tracking_for(self.class, context) }
       end

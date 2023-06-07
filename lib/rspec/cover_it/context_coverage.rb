@@ -46,21 +46,37 @@ module RSpec
         MESSAGE
       end
 
+      def uncovered_lines
+        @_uncovered_lines ||= local_coverage.each_with_index.select { |v, _i| v&.zero? }.map(&:last)
+      end
+
+      def single_uncovered_line_summary
+        "on line #{uncovered_lines.first}"
+      end
+
+      def few_uncovered_lines_summary
+        "on lines #{uncovered_lines.map(&:to_s).join(", ")}"
+      end
+
+      def many_uncovered_lines_summary
+        shortened_list = uncovered_lines.first(10).map(&:to_s).join(", ")
+        "on #{uncovered_lines.length} lines, including #{shortened_list}"
+      end
+
+      def uncovered_lines_summary
+        if uncovered_lines.length == 1
+          single_uncovered_line_summary
+        elsif uncovered_lines.length <= 10
+          few_uncovered_lines_summary
+        else
+          many_uncovered_lines_summary
+        end
+      end
+
       def fail_with_missing_coverage!
-        lines = local_coverage.each_with_index.select { |v, _i| v&.zero? }.map(&:last)
-
-        summary =
-          if lines.length == 1
-            "on line #{lines.first}"
-          elsif lines.length <= 10
-            "on lines #{lines.map(&:to_s).join(", ")}"
-          else
-            "on #{lines.length} lines, including #{lines.first(10).map(&:to_s).join(", ")}"
-          end
-
         fail(MissingCoverage, <<~MESSAGE.tr("\n", " "))
           Example group `#{context.scope_name}` is missing coverage on
-          `#{context.target_class}` in `#{context.target_path}` #{summary}
+          `#{context.target_class}` in `#{context.target_path}` #{uncovered_lines_summary}
         MESSAGE
       end
 
