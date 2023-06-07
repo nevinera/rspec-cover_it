@@ -115,17 +115,9 @@ That's not the goal here, and I'm not going to worry about it.
 As initially implemented, it fails your tests if you don't run the entire test
 file. `rspec spec/foo_spec.rb:32` will error, because .. running only one of
 your tests _doesn't cover the class_. I have a solution for this, but it uses
-some non-public bits of RSpec, so I'm trying to find a better answer first.
+some non-public bits of RSpec, so I'm trying to find a better answer still.
 (Conversation started in their
 [issue tracker](https://github.com/rspec/rspec-core/issues/3037))
-
-So far, I haven't found a _great_ way to report that there's a problem. The
-output from having insufficient coverage is _raising an exception from an
-`after(:context)` hook_, which RSpec rescues and formats for itself, and there
-aren't a lot of controls - it works, but it's a bit ugly and doesn't really
-give the right immediate impression. I'm contemplating using an `after(:suite)`
-hook and aggregating them myself, but at the end of the day RSpec is in control
-of the output stream, and we don't entirely fit its metaphor.
 
 We're using `Object.const_source_location` to find the path of the source file
 defining a given constant. That _mostly_ works, but it actually gives the path
