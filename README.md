@@ -58,13 +58,20 @@ In example groups, you can use metadata to control the behavior of
   this ExampleGroup. If numeric, it's enabling, and specifying the coverage
   threshold at the same time (as a percentage - `cover_it: 95` requires 95%
   coverage of the target class by this example group).
+* `covers_path`: The path (relative to the spec file!) of the code the spec is
+  intending to cover. Later, this can be an array of paths, for the multi-spec
+  case `covers` is intended for as well. This is an annoying work-around for
+  the fact that we can't perfectly infer the location of the source code in
+  some cases - in particular, `lib/foo/version.rb` tends to cause a problem
+  for specs on `foo.rb`, since the version file is invariably loaded first.
 * `covers`: An array of classes and modules that this example groups _thinks
   it is completely testing_. Ideally, you'd have a separate test file for each,
   but sometimes that's hard to do - you can let one spec claim responsibility
   for multiple classes and modules (such as Concerns) using this. Be default
   it is just `[described_class]`. Additionally, if your top-level example
   group _does not describe a Class or Module_, you may use `covers` to let it
-  invoke `rspec-cover_it` anyway.
+  invoke `rspec-cover_it` anyway - some people `describe "a descriptive string"`
+  instead of `describe AClass`, and .. fine.
 
 ## Implementation
 

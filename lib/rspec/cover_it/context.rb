@@ -17,7 +17,7 @@ module RSpec
       end
 
       def target_path
-        Object.const_source_location(target_class_name).first
+        metadata.key?(:covers_path) ? metadata_path : inferred_path
       end
 
       def target_class
@@ -46,6 +46,16 @@ module RSpec
 
       def completeness_checker
         @_completeness_checker ||= ExampleGroupCompletenessChecker.new(scope)
+      end
+
+      def metadata_path
+        supplied_path = metadata.fetch(:covers_path)
+        spec_directory = File.dirname(scope.file_path)
+        File.expand_path(supplied_path, spec_directory)
+      end
+
+      def inferred_path
+        Object.const_source_location(target_class_name).first
       end
     end
   end
