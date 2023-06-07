@@ -67,12 +67,10 @@ module RSpec
         if path
           value = result[path]
           value.is_a?(Hash) ? value.fetch(:lines) : value
+        elsif result.any? { |_k, v| v.is_a?(Hash) }
+          result.transform_values { |v| v.fetch(:lines) }
         else
-          if result.any? { |_k, v| v.is_a?(Hash) }
-            result.transform_values { |v| v.fetch(:lines) }
-          else
-            result
-          end
+          result
         end
       end
     end
