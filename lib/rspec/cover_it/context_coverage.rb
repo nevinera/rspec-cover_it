@@ -25,7 +25,28 @@ module RSpec
       end
 
       def enforce!
-        return if local_coverage.nil? || local_coverage_rate >= 1.0
+        if precovered?
+          fail_with_missing_code!
+        elsif local_coverage_rate < 1.0
+          fail_with_missing_coverage!
+        end
+      end
+
+      private
+
+      def fail_with_missing_code!
+        fail(MissingCode, <<~MESSAGE.tr("\n", " "))
+          Example group `#{context.scope_name}` is attempting to cover the code for class
+          `#{context.target_class}`, but it was located at `#{context.target_path}`,
+          and does not appear to have any code to cover (or it was all executed before the
+          tests started). If this is not the correct path for the code under test, please
+          specify the correct path using the `covers:` spec metadata - sometimes the
+          rspec-cover_it gem isn't properly able to infer the correct source path for a
+          class.
+        MESSAGE
+      end
+
+      def fail_with_missing_coverage!
         lines = local_coverage.each_with_index.select { |v, _i| v&.zero? }.map(&:last)
 
         summary =
@@ -39,8 +60,6 @@ module RSpec
         message = "Missing coverage in #{context.target_path} #{summary}"
         fail(MissingCoverage, message)
       end
-
-      private
 
       attr_reader :context, :pretest_results
 
@@ -64,6 +83,11 @@ module RSpec
       def covered_line_count
         return nil unless local_coverage
         local_coverage.count { |executions| executions && executions > 0 }
+      end
+
+      def precovered?
+        return @_precovered if defined?(@_precovered)
+        @_precovered = pretest_coverage.nil? || pretest_coverage.none? { |n| n&.zero? }
       end
     end
   end

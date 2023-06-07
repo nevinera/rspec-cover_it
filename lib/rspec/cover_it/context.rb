@@ -23,6 +23,10 @@ module RSpec
         target_class.name
       end
 
+      def scope_name
+        scope.file_path
+      end
+
       private
 
       attr_reader :scope, :rspec_context

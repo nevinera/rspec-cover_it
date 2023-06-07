@@ -3,6 +3,7 @@ require "coverage"
 module RSpec
   module CoverIt
     Error = Class.new(StandardError)
+    MissingCode = Class.new(Error)
     MissingCoverage = Class.new(Error)
   end
 end
