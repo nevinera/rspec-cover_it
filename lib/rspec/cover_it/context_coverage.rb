@@ -8,6 +8,10 @@ module RSpec
 
       attr_accessor :precontext_coverage, :postcontext_coverage
 
+      def pretest_coverage
+        @_pretest_coverage ||= pretest_results[target_path]
+      end
+
       def local_coverage
         return nil unless precontext_coverage && postcontext_coverage
         @_local_coverage ||= pretest_coverage
@@ -20,16 +24,28 @@ module RSpec
         covered_line_count.to_f / coverable_line_count.to_f
       end
 
+      def enforce!
+        return if local_coverage_rate >= 1.0
+        lines = local_coverage.each_with_index.select { |v, _i| v&.zero? }.map(&:last)
+
+        summary =
+          if lines.length == 1
+            "on line #{lines.first}"
+          elsif lines.length <= 10
+            "on lines #{lines.map(&:to_s).join(", ")}"
+          else
+            "on #{lines.length} lines, including #{lines.first(10).map(&:to_s).join(", ")}"
+          end
+        message = "Missing coverage in #{context.target_path} #{summary}"
+        fail(MissingCoverage, message)
+      end
+
       private
 
-      attr_reader :context, :pretest_results, :precontext_coverage, :postcontext_coverage
+      attr_reader :context, :pretest_results
 
       def target_path
         @_target_path ||= context.target_path
-      end
-
-      def pretest_coverage
-        @_pretest_coverage ||= pretest_results[target_path]
       end
 
       # Really, we shouldn't see nil for any of these values unless they are all

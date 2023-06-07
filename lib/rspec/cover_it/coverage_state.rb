@@ -34,7 +34,7 @@ module RSpec
 
         context_coverage_for(context).tap do |context_coverage|
           context_coverage.postcontext_coverage = Coverage.peek_result[context.target_path]
-          fail("missing coverage!") if context_coverage.local_coverage_rate < 1.0
+          context_coverage.enforce!
         end
       end
 

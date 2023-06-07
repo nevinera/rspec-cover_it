@@ -78,7 +78,30 @@ We use `Object.const_source_location` to find the file that defines the
 means that, if you are reopening the class somewhere else, that coverage won't
 be checked; if you are including 15 Concerns, and don't intend to write separate
 specs for them, be sure to list them as `covers:` metadata on the test. Also,
-shame!.
+shame!
+
+## Output
+
+When there's missing coverage on the class under test, you'll currently see
+output like this:
+
+```
+❯ rspec
+
+Randomized with seed 29392
+...............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+An error occurred in an `after(:context)` hook.
+Failure/Error: fail(MissingCoverage, message)
+  Missing coverage in /Users/emueller/src/quiet_quality/lib/quiet_quality/message.rb on line 7
+# /Users/emueller/src/rspec-cover_it/lib/rspec/cover_it/context_coverage.rb:40:in `enforce!'
+# /Users/emueller/src/rspec-cover_it/lib/rspec/cover_it/coverage_state.rb:37:in `block in finish_tracking_for'
+# /Users/emueller/src/rspec-cover_it/lib/rspec/cover_it/coverage_state.rb:35:in `finish_tracking_for'
+# /Users/emueller/src/rspec-cover_it/lib/rspec/cover_it.rb:26:in `block (2 levels) in setup'
+.....................................................................................................................................................................................................................................................................................................
+
+Finished in 1.06 seconds (files took 0.28925 seconds to load)
+852 examples, 0 failures, 1 error occurred outside of examples
+```
 
 ## Drawbacks and Shortcomings
 
