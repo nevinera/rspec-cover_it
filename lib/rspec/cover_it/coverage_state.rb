@@ -16,7 +16,7 @@ module RSpec
       end
 
       def finish_load_tracking
-        @pretest_results = PretestCoverage.new(filter: filter, results: Coverage.peek_result)
+        @pretest_results = PretestCoverage.new(filter: filter, results: get_current_coverage)
       end
 
       def start_tracking_for(scope, rspec_context)
@@ -24,7 +24,7 @@ module RSpec
         return unless context.cover_it?
 
         context_coverage_for(context).tap do |context_coverage|
-          context_coverage.precontext_coverage = Coverage.peek_result[context.target_path]
+          context_coverage.precontext_coverage = get_current_coverage(context.target_path)
         end
       end
 
@@ -33,7 +33,7 @@ module RSpec
         return unless context.cover_it?
 
         context_coverage_for(context).tap do |context_coverage|
-          context_coverage.postcontext_coverage = Coverage.peek_result[context.target_path]
+          context_coverage.postcontext_coverage = get_current_coverage(context.target_path)
           context_coverage.enforce!(default_threshold: default_threshold_rate)
         end
       end
@@ -59,6 +59,21 @@ module RSpec
           context: context,
           pretest_results: pretest_results
         )
+      end
+
+      def get_current_coverage(path = nil)
+        result = Coverage.peek_result
+
+        if path
+          value = result[path]
+          value.is_a?(Hash) ? value.fetch(:lines) : value
+        else
+          if result.any? { |_k, v| v.is_a?(Hash) }
+            result.transform_values { |v| v.fetch(:lines) }
+          else
+            result
+          end
+        end
       end
     end
   end

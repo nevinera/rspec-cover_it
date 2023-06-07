@@ -33,10 +33,7 @@ You set up `RSpec::CoverIt` in your `spec_helper.rb` - require `rspec/cover_it`,
 and then `RSpec::CoverIt.setup(**config_options)` (before loading your code, as
 you would with any other coverage library). It's.. _semi_ compatible with other
 coverage systems - it only starts Coverage if it's not already running, and it
-only uses `peek_result`, so it doesn't affect other systems outcomes. But if you
-setup SimpleCov to do branch-coverage or something, that will break this gem,
-for now (we assume basic line-coverage style results).
-
+only uses `peek_result`, so it doesn't affect other systems outcomes.
 Rough configuration options:
 
 * `filter`: Only paths starting with this (matching this regex?) can matter
