@@ -6,7 +6,9 @@ module RSpec
       end
 
       def cover_it?
-        target_class && metadata.fetch(:cover_it, autoenforce?)
+        target_class &&
+          metadata.fetch(:cover_it, autoenforce?) &&
+          completeness_checker.running_all_examples?
       end
 
       def target_path
@@ -31,6 +33,10 @@ module RSpec
 
       def metadata
         scope.metadata
+      end
+
+      def completeness_checker
+        @_completeness_checker ||= ExampleGroupCompletenessChecker.new(scope)
       end
     end
   end
