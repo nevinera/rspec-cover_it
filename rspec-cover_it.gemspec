@@ -27,7 +27,7 @@ Gem::Specification.new do |spec|
       .reject { |f| f.start_with?("spec") }
   end
 
-  spec.add_dependency "rspec", ">= 3.10"
+  spec.add_dependency "rspec", "~> 3.10"
 
   spec.add_development_dependency "pry", "~> 0.14"
   spec.add_development_dependency "standard", "~> 1.28"
