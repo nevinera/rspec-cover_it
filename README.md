@@ -64,6 +64,10 @@ In example groups, you can use metadata to control the behavior of
   the fact that we can't perfectly infer the location of the source code in
   some cases - in particular, `lib/foo/version.rb` tends to cause a problem
   for specs on `foo.rb`, since the version file is invariably loaded first.
+  Note - in gems, this _frequently_ also happens when you glob-load a directory
+  _before_ defining the namespace they are all loading objects into. Then the
+  first file in that directory that loads ends up being the one that actually
+  creates the namespace.
 * `covers`: An array of classes and modules that this example groups _thinks
   it is completely testing_. Ideally, you'd have a separate test file for each,
   but sometimes that's hard to do - you can let one spec claim responsibility
