@@ -57,8 +57,11 @@ module RSpec
           else
             "on #{lines.length} lines, including #{lines.first(10).map(&:to_s).join(", ")}"
           end
-        message = "Missing coverage in #{context.target_path} #{summary}"
-        fail(MissingCoverage, message)
+
+        fail(MissingCoverage, <<~MESSAGE.tr("\n", " "))
+          Example group `#{context.scope_name}` is missing coverage on
+          `#{context.target_class}` in `#{context.target_path}` #{summary}
+        MESSAGE
       end
 
       attr_reader :context, :pretest_results
