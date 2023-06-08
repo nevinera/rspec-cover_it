@@ -8,23 +8,22 @@ module RSpec
 
       attr_accessor :precontext_coverage, :postcontext_coverage
 
-      def pretest_coverage
-        @_pretest_coverage ||= pretest_results[target_path]
-      end
-
       def local_coverage
-        return nil unless precontext_coverage && postcontext_coverage
+        assert_ready!
+        return nil unless precontext_coverage && postcontext_coverage && coverable_lines?
         @_local_coverage ||= pretest_coverage
           .zip(precontext_coverage, postcontext_coverage)
           .map { |a, b, c| line_calculation(a, b, c) }
       end
 
       def local_coverage_rate
+        assert_ready!
         return nil unless covered_line_count
         covered_line_count.to_f / coverable_line_count.to_f
       end
 
       def enforce!(default_threshold:)
+        assert_ready!
         if precovered?
           fail_with_missing_code!
         elsif local_coverage_rate < (context.specific_threshold || default_threshold)
@@ -33,6 +32,19 @@ module RSpec
       end
 
       private
+
+      def pretest_coverage
+        @_pretest_coverage ||= pretest_results[target_path]
+      end
+
+      def coverable_lines?
+        pretest_coverage.compact.any?
+      end
+
+      def assert_ready!
+        return if precontext_coverage && postcontext_coverage
+        fail(NotReady, "ContextCoverage was not ready yet, something has gone wrong")
+      end
 
       def fail_with_missing_code!
         fail(MissingCode, <<~MESSAGE.tr("\n", " "))
@@ -74,7 +86,7 @@ module RSpec
       end
 
       def fail_with_missing_coverage!
-        fail(MissingCoverage, <<~MESSAGE.tr("\n", " "))
+        fail(MissingCoverage, <<~MESSAGE.tr("\n", " ").strip)
           Example group `#{context.scope_name}` is missing coverage on
           `#{context.target_class}` in `#{context.target_path}` #{uncovered_lines_summary}
         MESSAGE
