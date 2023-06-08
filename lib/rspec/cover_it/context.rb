@@ -24,10 +24,6 @@ module RSpec
         metadata.fetch(:described_class, nil)
       end
 
-      def target_class_name
-        target_class.name
-      end
-
       def scope_name
         scope.file_path
       end
@@ -55,7 +51,8 @@ module RSpec
       end
 
       def inferred_path
-        Object.const_source_location(target_class_name).first
+        return nil if target_class.nil?
+        Object.const_source_location(target_class.name).first
       end
     end
   end
