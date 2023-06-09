@@ -56,4 +56,5 @@ RSpec.configure do |config|
   config.mock_with :rspec
   config.order = "random"
   config.tty = true
+  config.pattern = "spec/rspec/**{,/*/**}/*_spec.rb"
 end
