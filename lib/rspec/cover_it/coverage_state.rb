@@ -1,7 +1,8 @@
 module RSpec
   module CoverIt
     class CoverageState
-      attr_reader :filter
+      attr_accessor :pretest_results
+      attr_reader :filter, :context_coverages
 
       def initialize(filter: nil, autoenforce: false, default_threshold: 100.0)
         @filter, @autoenforce, @default_threshold = filter, autoenforce, default_threshold
@@ -23,24 +24,21 @@ module RSpec
         context = context_for(scope, rspec_context)
         return unless context.cover_it?
 
-        context_coverage_for(context).tap do |context_coverage|
-          context_coverage.precontext_coverage = get_current_coverage(context.target_path)
-        end
+        context_coverage = ContextCoverage.new(context: context, pretest_results: pretest_results)
+        @context_coverages[context.target_class] = context_coverage
+        context_coverage.precontext_coverage = get_current_coverage(context.target_path)
       end
 
       def finish_tracking_for(scope, rspec_context)
         context = context_for(scope, rspec_context)
         return unless context.cover_it?
 
-        context_coverage_for(context).tap do |context_coverage|
-          context_coverage.postcontext_coverage = get_current_coverage(context.target_path)
-          context_coverage.enforce!(default_threshold: default_threshold_rate)
-        end
+        context_coverage = @context_coverages.fetch(context.target_class)
+        context_coverage.postcontext_coverage = get_current_coverage(context.target_path)
+        context_coverage.enforce!(default_threshold: default_threshold_rate)
       end
 
       private
-
-      attr_reader :pretest_results
 
       def autoenforce?
         @autoenforce
@@ -52,13 +50,6 @@ module RSpec
 
       def context_for(scope, rspec_context)
         Context.new(scope: scope, rspec_context: rspec_context, autoenforce: autoenforce?)
-      end
-
-      def context_coverage_for(context)
-        @context_coverages[context.target_class] ||= ContextCoverage.new(
-          context: context,
-          pretest_results: pretest_results
-        )
       end
 
       def get_current_coverage(path = nil)

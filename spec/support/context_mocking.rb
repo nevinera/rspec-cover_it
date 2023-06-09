@@ -9,6 +9,12 @@ module ContextMocking
     mocked_methods = defaults.merge(attrs)
     instance_double(RSpec::CoverIt::Context, **mocked_methods)
   end
+
+  def stubbed_context_instantiation(**attrs)
+    mock_context(**attrs).tap do |fake|
+      allow(RSpec::CoverIt::Context).to receive(:new).and_return(fake)
+    end
+  end
 end
 
 RSpec.configure do |config|
