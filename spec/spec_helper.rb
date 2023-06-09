@@ -25,8 +25,9 @@ if ENV["SIMPLECOV"]
 
   SimpleCov.start do
     formatter(ProblemsFormatter) if ENV["SIMPLECOV_TEXT"]
-    # minimum_coverage line: 100
+    minimum_coverage line: 100
     add_filter %r{spec/rspec/}
+    add_filter "rspec/cover_it.rb"
   end
 end
 
