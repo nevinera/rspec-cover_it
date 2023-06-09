@@ -4,12 +4,12 @@ module Fine
       @a = a
     end
 
-    def a
+    def a?
       @a
     end
 
     def a_times(n)
-      a * n
+      @a * n
     end
   end
 end

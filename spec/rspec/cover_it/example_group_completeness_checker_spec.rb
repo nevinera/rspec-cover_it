@@ -40,7 +40,7 @@ RSpec.describe RSpec::CoverIt::ExampleGroupCompletenessChecker do
     end
 
     context "when an example is filtered out" do
-      let(:dfe) { %w(a b c d f) }
+      let(:dfe) { %w[a b c d f] }
       it { is_expected.to be_falsey }
     end
 

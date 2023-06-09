@@ -4,7 +4,7 @@ module Fine
       @a = a
     end
 
-    def a
+    def a?
       @a
     end
 

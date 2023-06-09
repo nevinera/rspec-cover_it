@@ -8,7 +8,7 @@ RSpec.describe RSpec::CoverIt do
     let(:project_path) { fixture_path("projects", "fine") }
 
     it "produces the expected successful outcome" do
-      out, err, stat = Open3.capture3(command)
+      out, _err, stat = Open3.capture3(command)
       expect(stat).to be_success
       expect(out).to match(/\.\.\.\./)
       expect(out).to match(/Randomized with seed/)
@@ -21,7 +21,7 @@ RSpec.describe RSpec::CoverIt do
     let(:target) { "spec/fine/foo_spec.rb" }
 
     it "produces the expected failure outcome" do
-      out, err, stat = Open3.capture3(command)
+      out, _err, stat = Open3.capture3(command)
       expect(stat).not_to be_success
       expect(out).to match(/Randomized with seed/)
       expect(out).to match(/1 example, 0 failures, 1 error occurred outside of examples/)
@@ -35,7 +35,7 @@ RSpec.describe RSpec::CoverIt do
     let(:target) { "spec/fine/bar_spec.rb" }
 
     it "produces the expected failure outcome" do
-      out, err, stat = Open3.capture3(command)
+      out, _err, stat = Open3.capture3(command)
       expect(stat).not_to be_success
       expect(out).to match(/Randomized with seed/)
       expect(out).to match(/6 examples, 0 failures, 1 error occurred outside of examples/)

@@ -25,8 +25,8 @@ module RSpec
         return unless context.cover_it?
 
         context_coverage = ContextCoverage.new(context: context, pretest_results: pretest_results)
-        @context_coverages[context.target_class] = context_coverage
         context_coverage.precontext_coverage = get_current_coverage(context.target_path)
+        @context_coverages[context.target_class] = context_coverage
       end
 
       def finish_tracking_for(scope, rspec_context)
