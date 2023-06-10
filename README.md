@@ -1,139 +1,116 @@
 # RSpec::CoverIt
 
-Still a work in progress, but this gem is intended to give us a simpler and
-more _targeted_ way to manage coverage. The usual system for a large project
-is a single overarching SimpleCov target; with good tooling, there will be
-something checking that all of the lines of each PR get covered by the tests
-in that PR, and there are checks that the overall coverage number doesn't drop
-too far.. but it's a _sloppy, messy, lossy_ approach. Code loses coverage,
-code gets added with no tests, tests get removed and other code becomes less
-covered, and a lot of the time, that's because the _coverage is a lie_.
+The standard approach to monitoring "test coverage" in ruby is a tool called
+[SimpleCov](https://github.com/simplecov-ruby/simplecov), and a variety of
+systems made to hook into its output, to display a single number that represents
+how much of your _total code_ is executed during your test suite. You set up
+SimpleCov, and then you commit your team to maintaining whatever test coverage
+number you already have achieved globally, or to improving that coverage number.
+If you have one of the better tools, you can commit to things like "all merged
+PRs should have 100% (or 95%, etc) coverage on all of their touched code."
 
-Your coverage tool is telling you.. how many times each line of code _got run_
-during your entire test suite. But it's not telling you what is doing the
-running, which means that often large swathes of code are actually only covered
-incidentally, through tests that aren't intended to exercise that code, but
-_happens to_.
+That's.. better than nothing. A lot better - it can especially tell you when you
+forgot to write tests for some component, or when you're adjusting a class that
+doesn't have any tests written for it. But it's _not great_, not compared to a
+system like RSpec that lets you specify with _granularity_ how things should
+behave. The problem with SimpleCov is that it's _holistic_ - you can't adopt
+simplecov one class at a time, or enforce full coverage on new code _in your
+CI system_, you need external tooling with state persistence for that.
 
-This approach was moderately inspired by
-[rspec-coverage](https://github.com/jamesdabbs/rspec-coverage), which was itself
-apparently inspired by a rubyconf 2016 talk by Ryan Davis. That talk and library
-are mostly concerned with making sure that we don't _overcount_ coverage though,
-while this one has three goals:
+`RSpec::CoverIt` takes a different approach, somewhat inspired by the
+[rspec-coverage](https://github.com/jamesdabbs/rspec-coverage) gem (which was
+itself apparently inspired by a rubyconf-2016 talk by Ryan Davis). With CoverIt,
+coverage-enforcement happens as part of your test-suite, enforced by rspec
+either globally or as specified.
 
-1. Make coverage enforcement simpler
-1. Enforce coverage _in the test suite_ (or nearly so)
-1. Make coverage enforcement more local and specific.
+## Installation and Setup
 
-## Tentative Usage
+Add the gem to your Gemfile or gemspec just like `simplecov` or `rspec`. Then
+in your `spec_helper.rb`, _before_ you require your application or gem code,
+require `rspec/cover_it`, and then invoke `RSpec::CoverIt.setup`, with the
+appropriate options to configure it (described further down). A reasonable
+initial setup might look like this:
 
-Note that this bit isn't really implemented, but is more of an outline of how I
-intend the library to work. This is currently a spike, and not a functioning gem.
+```
+require "rspec/cover_it"
+project_root = File.expand_path("../..", __FILE__)
+RSpec::CoverIt.setup(filter: project_root, autoenforce: true)
 
-You set up `RSpec::CoverIt` in your `spec_helper.rb` - require `rspec/cover_it`,
-and then `RSpec::CoverIt.setup(**config_options)` (before loading your code, as
-you would with any other coverage library). It's.. _semi_ compatible with other
-coverage systems - it only starts Coverage if it's not already running, and it
-only uses `peek_result`, so it doesn't affect other systems outcomes.
-Rough configuration options:
-
-* `filter`: Only paths starting with this (matching this regex?) can matter
-* `autoenforce`: off by default - with this disabled, you turn on coverage
-  enforcement for a given top-level describe ExampleGroup by adding metadata
-  like `cover_it: true` or `cover_it: 95`. If it's enabled though, you instead
-  can turn enforcement _off_ for an example group by setting `cover_it: false`.
-* `global_threshold`: 100% by default. This whole "90% coverage is the right
-  target" thing is mostly a side-effect of the way we check the entire project
-  under one number.. but it's an easy setting to support, and I'm sure people
-  will disagree with me.
-
-## Example Group Metadata
-
-In example groups, you can use metadata to control the behavior of
-`rspec-cover_it`. These keys have meaning:
-
-* `cover_it`: if boolean, it enables or disables the coverage enforcement for
-  this ExampleGroup. If numeric, it's enabling, and specifying the coverage
-  threshold at the same time (as a percentage - `cover_it: 95` requires 95%
-  coverage of the target class by this example group).
-* `covers_path`: The path (relative to the spec file!) of the code the spec is
-  intending to cover. Later, this can be an array of paths, for the multi-spec
-  case `covers` is intended for as well. This is an annoying work-around for
-  the fact that we can't perfectly infer the location of the source code in
-  some cases - in particular, `lib/foo/version.rb` tends to cause a problem
-  for specs on `foo.rb`, since the version file is invariably loaded first.
-  Note - in gems, this _frequently_ also happens when you glob-load a directory
-  _before_ defining the namespace they are all loading objects into. Then the
-  first file in that directory that loads ends up being the one that actually
-  creates the namespace.
-* `covers`: An array of classes and modules that this example groups _thinks
-  it is completely testing_. Ideally, you'd have a separate test file for each,
-  but sometimes that's hard to do - you can let one spec claim responsibility
-  for multiple classes and modules (such as Concerns) using this. Be default
-  it is just `[described_class]`. Additionally, if your top-level example
-  group _does not describe a Class or Module_, you may use `covers` to let it
-  invoke `rspec-cover_it` anyway - some people `describe "a descriptive string"`
-  instead of `describe AClass`, and .. fine.
-
-## Implementation
-
-We record the coverage information in a `before(:suite)` rspec hook using
-`Coverage.peek_result`, and hold onto that information. Then before and after
-each 'context' (which really amounts to 'each spec file'), we grab the coverage
-information again.
-
-We use `Object.const_source_location` to find the file that defines the
-`described_class`, and _that_ is what is being assessed for coverage. This
-means that, if you are reopening the class somewhere else, that coverage won't
-be checked; if you are including 15 Concerns, and don't intend to write separate
-specs for them, be sure to list them as `covers:` metadata on the test. Also,
-shame!
-
-## Output
-
-When there's missing coverage on the class under test, you'll currently see
-output like this:
-
-```bash
-❯ rspec
-
-Randomized with seed 29392
-...............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
-An error occurred in an `after(:context)` hook.
-Failure/Error: fail(MissingCoverage, message)
-  Missing coverage in /Users/emueller/src/quiet_quality/lib/quiet_quality/message.rb on line 7
-# /Users/emueller/src/rspec-cover_it/lib/rspec/cover_it/context_coverage.rb:40:in `enforce!'
-# /Users/emueller/src/rspec-cover_it/lib/rspec/cover_it/coverage_state.rb:37:in `block in finish_tracking_for'
-# /Users/emueller/src/rspec-cover_it/lib/rspec/cover_it/coverage_state.rb:35:in `finish_tracking_for'
-# /Users/emueller/src/rspec-cover_it/lib/rspec/cover_it.rb:26:in `block (2 levels) in setup'
-.....................................................................................................................................................................................................................................................................................................
-
-Finished in 1.06 seconds (files took 0.28925 seconds to load)
-852 examples, 0 failures, 1 error occurred outside of examples
+require File.expand_path("../../lib/my_gem", __FILE__)
 ```
 
-## Drawbacks and Shortcomings
+## Configuration and Usage
 
-There's nothing in here that stops you from failing to write tests for a class
-at all! If you're using SimpleCov and you've got 100% coverage already, that's
-one of the benefits.. I could pretty reasonably include some kind of
-`after(:suite)` hook that optionally checks net coverage, but.. simplecov does
-that, and the concurrent-testing game makes this a _painful_ topic in reality.
-That's not the goal here, and I'm not going to worry about it.
+When invoking `RSpec::CoverIt.setup`, you may supply these options:
 
-As initially implemented, it fails your tests if you don't run the entire test
-file. `rspec spec/foo_spec.rb:32` will error, because .. running only one of
-your tests _doesn't cover the class_. I have a solution for this, but it uses
-some non-public bits of RSpec, so I'm trying to find a better answer still.
-(Conversation started in their
-[issue tracker](https://github.com/rspec/rspec-core/issues/3037))
+* `filter`: Don't track coverage information about files that don't start with
+  this prefix - this is largely a performance optimization, allowing the pretest
+  coverage tracking to track information only about the current project, and not
+  the various gems it might depend on.
+* `autoenforce`: This is off by default, which means that coverage-enforcement
+  will only be applied to top-level example groups that _request_ it, by
+  supplying the `cover_it: true` spec metaddata. If you configure `autoenforce`
+  to be `true`, then all specs will attempt to enforce coverage, as long as they
+  can figure out their targets (unless they are told not to).
 
-We're using `Object.const_source_location` to find the path of the source file
-defining a given constant. That _mostly_ works, but it actually gives the path
-of the _first_ source file that defined that constant. So if your gem defines
-its version in `lib/foo/version.rb` (as an example), in a separate file from
-lib/foo.rb, the _path_ for `Foo` may end up being the former. Which is.. not
-going to have much coverable code, of course. This is an edge case, but one
-that is likely to occur fairly regularly. I haven't thought of a _good_ solution
-yet. Perhaps if the `covers` array includes a string, we should treat it as a
-relative path?
+When setting up a test file, you can configure some additional details for that
+example group - `CoverIt` is aware of the following bits of spec metadata:
+
+* `cover_it`: If supplied with a truthy value, it activates coverage enforcement
+  for this example-group - if supplied with a falsey value, it _deactivates_
+  enforcement. If supplied with a _numeric_ value, it is treated as a percentage,
+  and used to configure the target coverage threshold for the class' definition,
+  a feature which I intend not to use, but I expect some people to care deeply
+  about.
+* `covers_path`: in certain cases, a class or module may be "defined" in several
+  locations. While actually enforcing coverage for multiple code files from one
+  test file isn't yet implemented, if `rspec-cover_it` infers the location of
+  the code under test _incorrectly_, you can tell it where to actually enforce
+  coverage against by supplying a path here (relative to the directory
+  containing the test file).
+
+## Implementation Approach
+
+When setting up the tool, we activate the built-in ruby Coverage system (we
+start it in legacy-supporting mode, but we are compatible with it having already
+been started in the more modern mode as well). Then we register three rspec
+hooks:
+
+* Before the suite _starts_ (which should be after everything is loaded), we
+  record the coverage _so far_ - this is the 'initialization' coverage, which
+  mostly includes the lines that run during class evaluation.
+* Before each 'context' (spec file), we record the coverage information
+* After each 'context' we record the coverage information _again_. Then we
+  subtract the two sets of coverage, which tells us how many times each line
+  was run _during this example group_, and add it to the 'initialization'
+  coverage to see the effective coverage for just this test file.
+
+Then, for each test file, we use ruby's source-introspection system to tell
+us where the "described class" was defined, and check what fraction of that
+source file is effectively covered by this example group. If there is some
+missing coverage, we raise an exception explaining the missing coverage.
+
+But of course, if you only run part of the tests in a spec file (perhaps by
+specifying a line number, or a description filter with `-e`), it probably won't
+be fully covered. We don't want to fail the test suite every time you're working
+on the specs for something, so we reach into RSpec a little to check if the
+set of _filtered_ examples (the ones being run) match the _full_ set of
+examples. If they don't, don't bother checking coverage for this test file.
+
+## Caveats and Shortcomings
+
+For the moment, there is no support for _autoloading_, which makes this library
+awkward to use for the majority of large rails applications. I intend to resolve
+this issue soon, but it's not a trivial one, as coverage-tracking on a per-spec
+basis relies on being able to separate coverage that happens during code-loading
+from coverage that happens during "tests other than this spec which have already
+occurred" - we'll need to add some kind of autoloading hooks to support it
+properly.
+
+Until then, the gem will only be useful to a rails application in an eager-
+loaded context - that's not a major issue in CI, but it's awkward when running
+tests locally. Happily, `rspec-cover_it` is fully compatible with `simplecov`
+(though you do need to start `SimpleCov` _before_ `Rspec::CoverIt`), so you can
+simply use simplecov locally when resolving coverage issues (or set up eager-
+loading locally based on an environment variable, the solution I prefer), and
+still use `RSpec::CoverIt` to enforce coverage in your CI system.
