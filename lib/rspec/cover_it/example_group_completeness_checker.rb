@@ -1,5 +1,3 @@
-require "set"
-
 module RSpec
   module CoverIt
     class ExampleGroupCompletenessChecker
