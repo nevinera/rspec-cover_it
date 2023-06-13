@@ -1,5 +1,8 @@
 require "coverage"
 
+# standardrb disallows this require _in ruby 3.2_, but we're back-compatible.
+require "set" # rubocop:disable Lint/RedundantRequireStatement
+
 module RSpec
   module CoverIt
     Error = Class.new(StandardError)
