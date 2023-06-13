@@ -31,7 +31,7 @@ require `rspec/cover_it`, and then invoke `RSpec::CoverIt.setup`, with the
 appropriate options to configure it (described further down). A reasonable
 initial setup might look like this:
 
-```
+```ruby
 require "rspec/cover_it"
 project_root = File.expand_path("../..", __FILE__)
 RSpec::CoverIt.setup(filter: project_root, autoenforce: true)
